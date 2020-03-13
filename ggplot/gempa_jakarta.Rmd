@@ -1,0 +1,65 @@
+---
+title: 'Tutorial: Visualisasi Gempa di Jakarta'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+Dalam tutorial ini, kita kan membuat visualisasi peta Jakarta serta lokasi kerusakkan akibat gempa di daerah Jakarta dengan menggunakan library *ggplot2*. Pertama-tama, buat data frame sebagai berikut:
+
+```{r}
+gempa <- data.frame(
+  x=c(3.5,3,4,4.5,4.1),
+  y=c(12,14,12.4,12.5,14), 
+  size=c(14,4,4,6,12)
+)
+```
+
+Lalu, install dan import library-library berikut:
+```{r}
+library(ggplot2)
+library(png)
+library(grid)
+library(ggimage)
+```
+
+Untuk membaca file image dengan format png, gunakan fungsi readPNG(). Sesuaikan working directory dan file directory dengan lokasi file di komputer.
+```{r warning=FALSE}
+jak <- readPNG("jakarta.png")
+```
+
+Untuk membuat plot:
+```{r}
+g <- ggplot(data = gempa, aes(x = x, y = y, size = size)) + 
+  geom_point(alpha=0.6, color="red2")
+g
+```
+
+Untuk membuat plot dengan background peta jakarta, gunakan fungsi annotation_custom(). Fungsi unit() menggunakan argument (Normalised Parent Coordinates) yang artinya ukuran gambar disesuaikan dengan plot induk nya:
+```{r}
+g <- ggplot(data = gempa, aes(x = x, y = y, size = size)) + 
+  annotation_custom(rasterGrob(jak,
+                               width = unit(1, "npc"),
+                               height = unit(1, "npc"))) + 
+  geom_point(alpha=0.6, color="red2", show.legend = FALSE) +
+  scale_size(range = c(0, 20))
+g
+```
+
+Untuk mengubah titik kerusakkan gempa dengan gambar lain, kita harus menambahkan kolom di dalam data frame yang berisi lokasi image kita:
+```{r}
+gempa$icon <- "impact.png"
+
+```
+
+Lalu, ubah fungsi geom_point() menjadi geom_image(). Kita tidak perlu untuk membaca image dengan menggunakan readPNG() karena fungsi geom_image() telah meng-handle pembacaan image tersebut:
+```{r}
+g <- ggplot(data = gempa, aes(x = x, y = y)) + 
+  annotation_custom(rasterGrob(jak,
+                               width = unit(1, "npc"),
+                               height = unit(1, "npc"))) + 
+  geom_image(aes(image=icon), size = 0.15)
+g
+```
+
